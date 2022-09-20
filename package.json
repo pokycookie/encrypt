@@ -1,0 +1,21 @@
+{
+  "name": "pg1",
+  "version": "1.0.0",
+  "description": "encrypt file program",
+  "main": "public/electron.js",
+  "scripts": {
+    "start": "electron .",
+    "tsc": "tsc ./public/electron.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cookie",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
+    "electron": "^20.1.4"
+  },
+  "dependencies": {
+    "crypto-js": "^4.1.1",
+    "typescript": "^4.8.3"
+  }
+}
