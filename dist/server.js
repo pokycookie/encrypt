@@ -42,7 +42,12 @@ app.post("/crypto", (req, res) => {
         mode: CryptoJS.mode.ECB,
     }).toString(CryptoJS.enc.Utf8);
     console.log(decrypted);
-    res.status(200);
+    res.status(200).json("OK");
+});
+app.post("nocrypt", (req, res) => {
+    const data = req.body;
+    console.log(data.data);
+    res.status(200).json("nocrypt");
 });
 app.listen(8000, () => {
     console.log(`Listening on: http://localhost:8000`);

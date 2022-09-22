@@ -23,7 +23,13 @@ app.post("/crypto", (req, res) => {
     mode: CryptoJS.mode.ECB,
   }).toString(CryptoJS.enc.Utf8);
   console.log(decrypted);
-  res.status(200);
+  res.status(200).json("OK");
+});
+
+app.post("/nocrypt", (req, res) => {
+  const data: { data: string } = req.body;
+  console.log(data.data);
+  res.status(200).json("nocrypt");
 });
 
 app.listen(8000, () => {
