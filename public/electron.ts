@@ -57,12 +57,19 @@ app
 
           const encrypted = funSwitch(args.fun, plane, key, args.mode);
           event.reply("read", encrypted);
-          axios.post("http://localhost:8000/upload", {
-            contents: encrypted,
-            key,
-            fun: args.fun,
-            mode: args.mode,
-          });
+          axios
+            .post("http://localhost:8000/upload", {
+              contents: encrypted,
+              key,
+              fun: args.fun,
+              mode: args.mode,
+            })
+            .then((res) => {
+              console.log(res.data);
+            })
+            .catch((err) => {
+              console.error(err);
+            });
         });
       });
     });
