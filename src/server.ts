@@ -12,24 +12,49 @@ app.get("/", (req, res) => {
   res.json("server");
 });
 
+type TFun = "DES" | "3DES" | "AES" | "nocrypt";
+type TMode = "ECB" | "CBC";
+
 interface ICryptoReq {
-  encrypt: string;
+  contents: string;
   key: string;
+  fun: TFun;
+  mode: TMode;
 }
 
-app.post("/crypto", (req, res) => {
-  const data: ICryptoReq = req.body;
-  const decrypted = CryptoJS.DES.decrypt(data.encrypt, data.key, {
-    mode: CryptoJS.mode.ECB,
-  }).toString(CryptoJS.enc.Utf8);
-  console.log(decrypted);
-  res.status(200).json("OK");
-});
+const modeSwitch = (mode: TMode) => {
+  switch (mode) {
+    case "ECB":
+      return CryptoJS.mode.ECB;
+    case "CBC":
+      return CryptoJS.mode.CBC;
+  }
+};
 
-app.post("/nocrypt", (req, res) => {
-  const data: { data: string } = req.body;
-  console.log(data.data);
-  res.status(200).json("nocrypt");
+const funSwitch = (fun: TFun, cipher: string, key: string, mode: TMode) => {
+  switch (fun) {
+    case "nocrypt":
+      return cipher;
+    case "DES":
+      return CryptoJS.DES.decrypt(cipher, key, { mode: modeSwitch(mode) }).toString(
+        CryptoJS.enc.Utf8
+      );
+    case "3DES":
+      return CryptoJS.TripleDES.decrypt(cipher, key, { mode: modeSwitch(mode) }).toString(
+        CryptoJS.enc.Utf8
+      );
+    case "AES":
+      return CryptoJS.AES.decrypt(cipher, key, { mode: modeSwitch(mode) }).toString(
+        CryptoJS.enc.Utf8
+      );
+  }
+};
+
+app.post("/upload", (req, res) => {
+  const data: ICryptoReq = req.body;
+  const decrypted = funSwitch(data.fun, data.contents, data.key, data.mode);
+  console.log(decrypted);
+  res.status(200).json(`${data.fun} - ${data.mode}`);
 });
 
 app.listen(8000, () => {

@@ -17,8 +17,26 @@ var createWindow = function () {
     });
     window.loadFile(path.join(__dirname, "/index.html"));
 };
-var modeSwitch = function () { };
-var funSwitch = function () { };
+var modeSwitch = function (mode) {
+    switch (mode) {
+        case "ECB":
+            return CryptoJS.mode.ECB;
+        case "CBC":
+            return CryptoJS.mode.CBC;
+    }
+};
+var funSwitch = function (fun, plane, key, mode) {
+    switch (fun) {
+        case "nocrypt":
+            return plane;
+        case "DES":
+            return CryptoJS.DES.encrypt(plane, key, { mode: modeSwitch(mode) }).toString();
+        case "3DES":
+            return CryptoJS.TripleDES.encrypt(plane, key, { mode: modeSwitch(mode) }).toString();
+        case "AES":
+            return CryptoJS.AES.encrypt(plane, key, { mode: modeSwitch(mode) }).toString();
+    }
+};
 electron_1.app
     .whenReady()
     .then(createWindow)
@@ -31,51 +49,14 @@ electron_1.app
                     console.error(err);
                 var plane = data.toString();
                 var key = "cookie";
-                var encrypted;
-                switch (args.fun) {
-                    case "DES":
-                        encrypted = CryptoJS.DES.encrypt(plane, key, {
-                            mode: CryptoJS.mode.ECB
-                        }).toString();
-                        var decrypted = CryptoJS.DES.decrypt(encrypted, key, {
-                            mode: CryptoJS.mode.ECB
-                        }).toString(CryptoJS.enc.Utf8);
-                        console.log(decrypted);
-                        event.reply("read", encrypted);
-                        axios_1["default"]
-                            .post("http://localhost:8000/crypto", {
-                            encrypt: encrypted,
-                            key: key
-                        })
-                            .then(function (res) {
-                            console.log(res.data);
-                        });
-                        break;
-                    case "3DES":
-                        encrypted = CryptoJS.TripleDES.encrypt(plane, key, {
-                            mode: CryptoJS.mode.ECB
-                        }).toString();
-                        event.reply("read", encrypted);
-                        break;
-                    case "AES":
-                        encrypted = CryptoJS.AES.encrypt(plane, key, {
-                            mode: CryptoJS.mode.ECB
-                        }).toString();
-                        event.reply("read", encrypted);
-                        break;
-                    case "nocrypt":
-                        console.log("nocrypt");
-                        axios_1["default"]
-                            .post("http://localhost:8000/nocrypt", {
-                            data: plane
-                        })
-                            .then(function (res) {
-                            console.log(res.data);
-                        });
-                        break;
-                    default:
-                        break;
-                }
+                var encrypted = funSwitch(args.fun, plane, key, args.mode);
+                event.reply("read", encrypted);
+                axios_1["default"].post("http://localhost:8000/upload", {
+                    contents: encrypted,
+                    key: key,
+                    fun: args.fun,
+                    mode: args.mode
+                });
             });
         });
     });

@@ -36,18 +36,31 @@ app.use(express_1.default.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
     res.json("server");
 });
-app.post("/crypto", (req, res) => {
+const modeSwitch = (mode) => {
+    switch (mode) {
+        case "ECB":
+            return CryptoJS.mode.ECB;
+        case "CBC":
+            return CryptoJS.mode.CBC;
+    }
+};
+const funSwitch = (fun, cipher, key, mode) => {
+    switch (fun) {
+        case "nocrypt":
+            return cipher;
+        case "DES":
+            return CryptoJS.DES.decrypt(cipher, key, { mode: modeSwitch(mode) }).toString(CryptoJS.enc.Utf8);
+        case "3DES":
+            return CryptoJS.TripleDES.decrypt(cipher, key, { mode: modeSwitch(mode) }).toString(CryptoJS.enc.Utf8);
+        case "AES":
+            return CryptoJS.AES.decrypt(cipher, key, { mode: modeSwitch(mode) }).toString(CryptoJS.enc.Utf8);
+    }
+};
+app.post("/upload", (req, res) => {
     const data = req.body;
-    const decrypted = CryptoJS.DES.decrypt(data.encrypt, data.key, {
-        mode: CryptoJS.mode.ECB,
-    }).toString(CryptoJS.enc.Utf8);
+    const decrypted = funSwitch(data.fun, data.contents, data.key, data.mode);
     console.log(decrypted);
-    res.status(200).json("OK");
-});
-app.post("nocrypt", (req, res) => {
-    const data = req.body;
-    console.log(data.data);
-    res.status(200).json("nocrypt");
+    res.status(200).json(`${data.fun} - ${data.mode}`);
 });
 app.listen(8000, () => {
     console.log(`Listening on: http://localhost:8000`);

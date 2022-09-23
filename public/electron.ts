@@ -18,66 +18,51 @@ const createWindow = () => {
   window.loadFile(path.join(__dirname, "/index.html"));
 };
 
-const modeSwitch = () => {};
+type TMode = "ECB" | "CBC";
+type TFun = "DES" | "3DES" | "AES" | "nocrypt";
 
-const funSwitch = () => {};
+const modeSwitch = (mode: TMode) => {
+  switch (mode) {
+    case "ECB":
+      return CryptoJS.mode.ECB;
+    case "CBC":
+      return CryptoJS.mode.CBC;
+  }
+};
+
+const funSwitch = (fun: TFun, plane: string, key: string, mode: TMode) => {
+  switch (fun) {
+    case "nocrypt":
+      return plane;
+    case "DES":
+      return CryptoJS.DES.encrypt(plane, key, { mode: modeSwitch(mode) }).toString();
+    case "3DES":
+      return CryptoJS.TripleDES.encrypt(plane, key, { mode: modeSwitch(mode) }).toString();
+    case "AES":
+      return CryptoJS.AES.encrypt(plane, key, { mode: modeSwitch(mode) }).toString();
+  }
+};
 
 app
   .whenReady()
   .then(createWindow)
   .then(() => {
-    ipcMain.on("read", (event, args) => {
+    ipcMain.on("read", (event, args: { fun: TFun; mode: TMode }) => {
       dialog.showOpenDialog({ defaultPath: rootPath }).then((res) => {
         const filePath = res.filePaths[0];
         fs.readFile(filePath, (err, data) => {
           if (err) console.error(err);
           const plane = data.toString();
           const key = "cookie";
-          let encrypted: string;
-          switch (args.fun) {
-            case "DES":
-              encrypted = CryptoJS.DES.encrypt(plane, key, {
-                mode: CryptoJS.mode.ECB,
-              }).toString();
-              const decrypted = CryptoJS.DES.decrypt(encrypted, key, {
-                mode: CryptoJS.mode.ECB,
-              }).toString(CryptoJS.enc.Utf8);
-              console.log(decrypted);
-              event.reply("read", encrypted);
-              axios
-                .post("http://localhost:8000/crypto", {
-                  encrypt: encrypted,
-                  key,
-                })
-                .then((res) => {
-                  console.log(res.data);
-                });
-              break;
-            case "3DES":
-              encrypted = CryptoJS.TripleDES.encrypt(plane, key, {
-                mode: CryptoJS.mode.ECB,
-              }).toString();
-              event.reply("read", encrypted);
-              break;
-            case "AES":
-              encrypted = CryptoJS.AES.encrypt(plane, key, {
-                mode: CryptoJS.mode.ECB,
-              }).toString();
-              event.reply("read", encrypted);
-              break;
-            case "nocrypt":
-              console.log("nocrypt");
-              axios
-                .post("http://localhost:8000/nocrypt", {
-                  data: plane,
-                })
-                .then((res) => {
-                  console.log(res.data);
-                });
-              break;
-            default:
-              break;
-          }
+
+          const encrypted = funSwitch(args.fun, plane, key, args.mode);
+          event.reply("read", encrypted);
+          axios.post("http://localhost:8000/upload", {
+            contents: encrypted,
+            key,
+            fun: args.fun,
+            mode: args.mode,
+          });
         });
       });
     });
