@@ -3,6 +3,8 @@ import * as path from "path";
 import * as fs from "fs";
 import * as CryptoJS from "crypto-js";
 import axios from "axios";
+import NodeRSA from "node-rsa";
+import crypto from "crypto";
 
 const rootPath = `${app.getPath("documents")}`;
 
@@ -72,6 +74,32 @@ app
             });
         });
       });
+    });
+    ipcMain.on("publicKey", (event, args) => {
+      const key = new NodeRSA({ b: 512 }).generateKeyPair();
+      const publicKey = key.exportKey("pkcs1-public-pem");
+      const privateKey = key.exportKey("pkcs8-private-pem");
+
+      axios
+        .post("http://localhost:8000/publicKey", {
+          publicKey,
+        })
+        .then((res) => {
+          const data: { encrypted: string } = res.data;
+          const encrypted = data.encrypted;
+          const decrypted = crypto
+            .privateDecrypt(
+              {
+                key: privateKey,
+              },
+              Buffer.from(encrypted, "base64")
+            )
+            .toString("utf8");
+          console.log(decrypted);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     });
   });
 

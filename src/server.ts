@@ -1,6 +1,7 @@
 import express from "express";
 import fileUpload from "express-fileupload";
 import * as CryptoJS from "crypto-js";
+import crypto from "crypto";
 
 const app = express();
 
@@ -14,13 +15,6 @@ app.get("/", (req, res) => {
 
 type TFun = "DES" | "3DES" | "AES" | "nocrypt";
 type TMode = "ECB" | "CBC";
-
-interface ICryptoReq {
-  contents: string;
-  key: string;
-  fun: TFun;
-  mode: TMode;
-}
 
 const modeSwitch = (mode: TMode) => {
   switch (mode) {
@@ -50,11 +44,27 @@ const funSwitch = (fun: TFun, cipher: string, key: string, mode: TMode) => {
   }
 };
 
+interface ICryptoReq {
+  contents: string;
+  key: string;
+  fun: TFun;
+  mode: TMode;
+}
+
 app.post("/upload", (req, res) => {
   const data: ICryptoReq = req.body;
   const decrypted = funSwitch(data.fun, data.contents, data.key, data.mode);
   console.log(decrypted);
   res.status(200).json(`${data.fun} - ${data.mode}`);
+});
+
+app.post("/publicKey", (req, res) => {
+  const data: { publicKey: string } = req.body;
+  const text = "Can you decrypt this text?";
+  const encrypted = crypto
+    .publicEncrypt({ key: data.publicKey }, Buffer.from(text))
+    .toString("base64");
+  res.status(200).json({ encrypted });
 });
 
 app.listen(8000, () => {
