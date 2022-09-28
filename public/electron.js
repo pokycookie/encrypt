@@ -5,6 +5,8 @@ var path = require("path");
 var fs = require("fs");
 var CryptoJS = require("crypto-js");
 var axios_1 = require("axios");
+var NodeRSA = require("node-rsa");
+var crypto = require("crypto");
 var rootPath = "".concat(electron_1.app.getPath("documents"));
 var createWindow = function () {
     var window = new electron_1.BrowserWindow({
@@ -51,13 +53,67 @@ electron_1.app
                 var key = "cookie";
                 var encrypted = funSwitch(args.fun, plane, key, args.mode);
                 event.reply("read", encrypted);
-                axios_1["default"].post("http://localhost:8000/upload", {
+                axios_1["default"]
+                    .post("http://localhost:8000/upload", {
                     contents: encrypted,
                     key: key,
                     fun: args.fun,
                     mode: args.mode
+                })
+                    .then(function (res) {
+                    console.log(res.data);
+                })["catch"](function (err) {
+                    console.error(err);
                 });
             });
+        });
+    });
+    electron_1.ipcMain.on("rsa1", function (event, args) {
+        var key = new NodeRSA({ b: 512 }).generateKeyPair();
+        var publicKey = key.exportKey("pkcs1-public-pem");
+        var privateKey = key.exportKey("pkcs8-private-pem");
+        console.log(publicKey);
+        console.log(privateKey);
+        axios_1["default"]
+            .post("http://localhost:8000/rsa1", {
+            publicKey: publicKey
+        })
+            .then(function (res) {
+            var data = res.data;
+            var encrypted = data.encrypted;
+            var decrypted = crypto
+                .privateDecrypt({
+                key: privateKey
+            }, Buffer.from(encrypted, "base64"))
+                .toString("utf8");
+            console.log(encrypted);
+            console.log(decrypted);
+        })["catch"](function (err) {
+            console.error(err);
+        });
+    });
+    electron_1.ipcMain.on("rsa2", function (event, args) {
+        var symmetricKey = "mySymmetricKey";
+        axios_1["default"]
+            .get("http://localhost:8000/rsa2")
+            .then(function (res) {
+            var data = res.data;
+            var encryptedKey = crypto
+                .publicEncrypt({ key: data.publicKey }, Buffer.from(symmetricKey))
+                .toString("base64");
+            axios_1["default"]
+                .post("http://localhost:8000/rsa2", {
+                encryptedKey: encryptedKey
+            })
+                .then(function (res) {
+                var data = res.data;
+                var decrypted = CryptoJS.AES.decrypt(data.encrypted, symmetricKey, {
+                    mode: CryptoJS.mode.CBC
+                }).toString(CryptoJS.enc.Utf8);
+                console.log(decrypted);
+            })["catch"](function (err) { return console.error(err); });
+        })["catch"](function (err) {
+            console.error(err);
         });
     });
 });

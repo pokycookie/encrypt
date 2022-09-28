@@ -7,18 +7,26 @@
     <title>Cryptology</title>
   </head>
   <body>
-    <p>Cryptology</p>
-    <select id="fun">
-      <option>DES</option>
-      <option>3DES</option>
-      <option>AES</option>
-      <option>nocrypt</option>
-    </select>
-    <select id="mode">
-      <option>ECB</option>
-      <option>CBC</option>
-    </select>
-    <button id="read">READ</button>
+    <div class="symmetric">
+      <p>Symmetric</p>
+      <select id="fun">
+        <option>DES</option>
+        <option>3DES</option>
+        <option>AES</option>
+        <option>nocrypt</option>
+      </select>
+      <select id="mode">
+        <option>ECB</option>
+        <option>CBC</option>
+      </select>
+      <button id="read">READ</button>
+    </div>
+    <div class="RSA1">
+      <button id="rsa1">RSA1</button>
+    </div>
+    <div class="RSA1">
+      <button id="rsa2">RSA2</button>
+    </div>
   </body>
   <script type="text/javascript" src="../dist/index.js"></script>
 </html>

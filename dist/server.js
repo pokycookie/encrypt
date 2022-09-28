@@ -29,6 +29,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const CryptoJS = __importStar(require("crypto-js"));
+const crypto_1 = __importDefault(require("crypto"));
+const node_rsa_1 = __importDefault(require("node-rsa"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, express_fileupload_1.default)());
@@ -61,6 +65,42 @@ app.post("/upload", (req, res) => {
     const decrypted = funSwitch(data.fun, data.contents, data.key, data.mode);
     console.log(decrypted);
     res.status(200).json(`${data.fun} - ${data.mode}`);
+});
+app.post("/rsa1", (req, res) => {
+    const data = req.body;
+    const text = "Can you decrypt this text?";
+    const encrypted = crypto_1.default
+        .publicEncrypt({ key: data.publicKey }, Buffer.from(text))
+        .toString("base64");
+    res.status(200).json({ encrypted });
+});
+let privateKey;
+app.get("/rsa2", (req, res) => {
+    const key = new node_rsa_1.default({ b: 512 }).generateKeyPair();
+    const publicKey = key.exportKey("pkcs1-public-pem");
+    privateKey = key.exportKey("pkcs8-private-pem");
+    res.status(200).json({ publicKey });
+});
+app.post("/rsa2", (req, res) => {
+    const data = req.body;
+    const symmetricKey = crypto_1.default
+        .privateDecrypt({ key: privateKey }, Buffer.from(data.encryptedKey, "base64"))
+        .toString("utf8");
+    const filePath = path_1.default.join(__dirname, "../public", "example.txt");
+    fs_1.default.readFile(filePath, (err, data) => {
+        if (err) {
+            console.error(err);
+            res.status(500);
+        }
+        const fileData = data.toString();
+        console.log(fileData);
+        console.log(symmetricKey);
+        const encrypted = CryptoJS.AES.encrypt(fileData, symmetricKey, {
+            mode: CryptoJS.mode.CBC,
+        }).toString();
+        console.log(encrypted);
+        res.status(200).json({ encrypted });
+    });
 });
 app.listen(8000, () => {
     console.log(`Listening on: http://localhost:8000`);

@@ -3,8 +3,8 @@ import * as path from "path";
 import * as fs from "fs";
 import * as CryptoJS from "crypto-js";
 import axios from "axios";
-import NodeRSA from "node-rsa";
-import crypto from "crypto";
+import * as NodeRSA from "node-rsa";
+import * as crypto from "crypto";
 
 const rootPath = `${app.getPath("documents")}`;
 
@@ -75,13 +75,16 @@ app
         });
       });
     });
-    ipcMain.on("publicKey", (event, args) => {
+    ipcMain.on("rsa1", (event, args) => {
       const key = new NodeRSA({ b: 512 }).generateKeyPair();
       const publicKey = key.exportKey("pkcs1-public-pem");
       const privateKey = key.exportKey("pkcs8-private-pem");
 
+      console.log(publicKey);
+      console.log(privateKey);
+
       axios
-        .post("http://localhost:8000/publicKey", {
+        .post("http://localhost:8000/rsa1", {
           publicKey,
         })
         .then((res) => {
@@ -95,7 +98,34 @@ app
               Buffer.from(encrypted, "base64")
             )
             .toString("utf8");
+          console.log(encrypted);
           console.log(decrypted);
+        })
+        .catch((err) => {
+          console.error(err);
+        });
+    });
+    ipcMain.on("rsa2", (event, args) => {
+      const symmetricKey = "mySymmetricKey";
+      axios
+        .get("http://localhost:8000/rsa2")
+        .then((res) => {
+          const data: { publicKey: string } = res.data;
+          const encryptedKey = crypto
+            .publicEncrypt({ key: data.publicKey }, Buffer.from(symmetricKey))
+            .toString("base64");
+          axios
+            .post("http://localhost:8000/rsa2", {
+              encryptedKey,
+            })
+            .then((res) => {
+              const data: { encrypted: string } = res.data;
+              const decrypted = CryptoJS.AES.decrypt(data.encrypted, symmetricKey, {
+                mode: CryptoJS.mode.CBC,
+              }).toString(CryptoJS.enc.Utf8);
+              console.log(decrypted);
+            })
+            .catch((err) => console.error(err));
         })
         .catch((err) => {
           console.error(err);
