@@ -1,4 +1,6 @@
-# Cryptology - pg1
+# Cryptology - pg1 / pg2
+
+PKNU 네트워크 보안 수업 실습을 위해 작성한 server-client 프로그램입니다.
 
 ## 준비
 
