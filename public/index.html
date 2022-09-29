@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="styles.css" />
     <title>Cryptology</title>
   </head>
   <body>
     <div class="symmetric">
-      <p>Symmetric</p>
       <select id="fun">
         <option>DES</option>
         <option>3DES</option>
@@ -21,10 +21,12 @@
       </select>
       <button id="read">READ</button>
     </div>
-    <div class="RSA1">
+    <div class="RSA1 RSA">
+      <textarea id="rsa1Result"></textarea>
       <button id="rsa1">RSA1</button>
     </div>
-    <div class="RSA1">
+    <div class="RSA1 RSA">
+      <textarea id="rsa2Result"></textarea>
       <button id="rsa2">RSA2</button>
     </div>
   </body>

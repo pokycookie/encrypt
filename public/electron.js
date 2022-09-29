@@ -7,11 +7,12 @@ var CryptoJS = require("crypto-js");
 var axios_1 = require("axios");
 var NodeRSA = require("node-rsa");
 var crypto = require("crypto");
+var moment = require("moment");
 var rootPath = "".concat(electron_1.app.getPath("documents"));
 var createWindow = function () {
     var window = new electron_1.BrowserWindow({
-        width: 1200,
-        height: 700,
+        width: 400,
+        height: 300,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -43,6 +44,7 @@ electron_1.app
     .whenReady()
     .then(createWindow)
     .then(function () {
+    // Symmetric
     electron_1.ipcMain.on("read", function (event, args) {
         electron_1.dialog.showOpenDialog({ defaultPath: rootPath }).then(function (res) {
             var filePath = res.filePaths[0];
@@ -68,12 +70,14 @@ electron_1.app
             });
         });
     });
+    // RSA1
     electron_1.ipcMain.on("rsa1", function (event, args) {
         var key = new NodeRSA({ b: 512 }).generateKeyPair();
         var publicKey = key.exportKey("pkcs1-public-pem");
         var privateKey = key.exportKey("pkcs8-private-pem");
         console.log(publicKey);
         console.log(privateKey);
+        var startTime = moment(new Date());
         axios_1["default"]
             .post("http://localhost:8000/rsa1", {
             publicKey: publicKey
@@ -86,14 +90,19 @@ electron_1.app
                 key: privateKey
             }, Buffer.from(encrypted, "base64"))
                 .toString("utf8");
-            console.log(encrypted);
             console.log(decrypted);
+            event.reply("rsa1", decrypted);
+            var endTime = moment(new Date());
+            var timeDiff = endTime.diff(startTime, "milliseconds");
+            console.log(timeDiff);
         })["catch"](function (err) {
             console.error(err);
         });
     });
+    // RSA2
     electron_1.ipcMain.on("rsa2", function (event, args) {
         var symmetricKey = "mySymmetricKey";
+        var startTime = moment(new Date());
         axios_1["default"]
             .get("http://localhost:8000/rsa2")
             .then(function (res) {
@@ -111,6 +120,10 @@ electron_1.app
                     mode: CryptoJS.mode.CBC
                 }).toString(CryptoJS.enc.Utf8);
                 console.log(decrypted);
+                event.reply("rsa2", decrypted);
+                var endTime = moment(new Date());
+                var timeDiff = endTime.diff(startTime, "milliseconds");
+                console.log(timeDiff);
             })["catch"](function (err) { return console.error(err); });
         })["catch"](function (err) {
             console.error(err);

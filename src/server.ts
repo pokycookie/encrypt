@@ -89,7 +89,7 @@ app.post("/rsa2", (req, res) => {
   fs.readFile(filePath, (err, data) => {
     if (err) {
       console.error(err);
-      res.status(500);
+      res.status(400);
     }
     const fileData = data.toString();
     console.log(fileData);

@@ -5,13 +5,14 @@ import * as CryptoJS from "crypto-js";
 import axios from "axios";
 import * as NodeRSA from "node-rsa";
 import * as crypto from "crypto";
+import * as moment from "moment";
 
 const rootPath = `${app.getPath("documents")}`;
 
 const createWindow = () => {
   const window = new BrowserWindow({
-    width: 1200,
-    height: 700,
+    width: 400,
+    height: 300,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -49,6 +50,7 @@ app
   .whenReady()
   .then(createWindow)
   .then(() => {
+    // Symmetric
     ipcMain.on("read", (event, args: { fun: TFun; mode: TMode }) => {
       dialog.showOpenDialog({ defaultPath: rootPath }).then((res) => {
         const filePath = res.filePaths[0];
@@ -75,6 +77,8 @@ app
         });
       });
     });
+
+    // RSA1
     ipcMain.on("rsa1", (event, args) => {
       const key = new NodeRSA({ b: 512 }).generateKeyPair();
       const publicKey = key.exportKey("pkcs1-public-pem");
@@ -83,6 +87,7 @@ app
       console.log(publicKey);
       console.log(privateKey);
 
+      const startTime = moment(new Date());
       axios
         .post("http://localhost:8000/rsa1", {
           publicKey,
@@ -98,15 +103,21 @@ app
               Buffer.from(encrypted, "base64")
             )
             .toString("utf8");
-          console.log(encrypted);
           console.log(decrypted);
+          event.reply("rsa1", decrypted);
+          const endTime = moment(new Date());
+          const timeDiff = endTime.diff(startTime, "milliseconds");
+          console.log(timeDiff);
         })
         .catch((err) => {
           console.error(err);
         });
     });
+
+    // RSA2
     ipcMain.on("rsa2", (event, args) => {
       const symmetricKey = "mySymmetricKey";
+      const startTime = moment(new Date());
       axios
         .get("http://localhost:8000/rsa2")
         .then((res) => {
@@ -124,6 +135,10 @@ app
                 mode: CryptoJS.mode.CBC,
               }).toString(CryptoJS.enc.Utf8);
               console.log(decrypted);
+              event.reply("rsa2", decrypted);
+              const endTime = moment(new Date());
+              const timeDiff = endTime.diff(startTime, "milliseconds");
+              console.log(timeDiff);
             })
             .catch((err) => console.error(err));
         })

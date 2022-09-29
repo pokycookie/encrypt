@@ -1,0 +1,14 @@
+.symmetric {
+  margin-bottom: 10px;
+}
+
+.RSA {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+textarea {
+  margin-right: 5px;
+}

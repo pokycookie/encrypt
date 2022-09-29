@@ -4,9 +4,21 @@ const funOpt = document.querySelector("select#fun");
 const modeOpt = document.querySelector("select#mode");
 const rsa1Btn = document.querySelector("button#rsa1");
 const rsa2Btn = document.querySelector("button#rsa2");
+const rsa1Result = document.querySelector("textarea#rsa1Result");
+const rsa2Result = document.querySelector("textarea#rsa2Result");
 const electron = window.require("electron");
 electron.ipcRenderer.on("read", (event, args) => {
     console.log(args);
+});
+electron.ipcRenderer.on("rsa1", (event, args) => {
+    if (rsa1Result) {
+        rsa1Result.innerText = args;
+    }
+});
+electron.ipcRenderer.on("rsa2", (event, args) => {
+    if (rsa2Result) {
+        rsa2Result.innerText = args;
+    }
 });
 let fun = "DES";
 let mode = "ECB";
